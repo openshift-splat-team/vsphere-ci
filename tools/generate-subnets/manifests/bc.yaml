@@ -1,0 +1,24 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: generate-subnets
+spec:
+  failedBuildsHistoryLimit: 1
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: generate-subnets:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: /
+    git:
+      uri: https://github.com/openshift-splat-team/vsphere-ci
+    type: Git
+  strategy:
+    dockerStrategy:
+      dockerfilePath: images/Dockerfile
+    type: Docker
+  successfulBuildsHistoryLimit: 1
