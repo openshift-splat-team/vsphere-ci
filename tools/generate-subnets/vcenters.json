@@ -1,0 +1,21 @@
+{
+  "2284482_jcallen@redhat.com": {
+    "bcr01a.dal10":
+      [
+        "vcenter.ibmc.devcluster.openshift.com"
+      ],
+    "bcr03a.dal10":
+      [
+        "v8c-2-vcenter.ocp2.dev.cluster.com",
+        "vcs8e-vc.ocp2.dev.cluster.com"
+      ],
+    "bcr01a.dal12": []
+  },
+  "2626524_jcallen@redhat.com": {
+    "bcr01a.dal10": [],
+    "bcr03a.dal10": [],
+  "bcr01a.dal12":[
+      "vcenter.devqe.ibmc.devcluster.openshift.com"
+    ]
+  }
+}
