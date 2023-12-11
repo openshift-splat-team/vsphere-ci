@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/c-robinson/iplib"
+
 	"github.com/softlayer/softlayer-go/services"
 	"github.com/softlayer/softlayer-go/session"
 )
@@ -26,6 +28,13 @@ type Subnet struct {
 	Network            string   `json:"network"`
 	IpAddresses        []string `json:"ipAddresses"`
 	VirtualCenter      string   `json:"virtualcenter"`
+
+	IPv6Prefix       string `json:"ipv6prefix"`
+	StartIPv6Address string
+	StopIPv6Address  string
+	LinkLocalIPv6    string
+	CidrIPv6         int
+	GatewayIPv6      string `json:"gatewayipv6"`
 }
 
 type CommandLineOptions struct {
@@ -118,12 +127,23 @@ func main() {
 				if strings.Contains(*vlan.Name, "ci") {
 					for _, subnet := range vlan.Subnets {
 
+						ipv6Subnet := iplib.Net6FromStr(fmt.Sprintf("fd65:a1a8:60ad:%d::1/64", *vlan.VlanNumber))
+						linkLocalSubnet := iplib.Net6FromStr("fe80::/64")
+
+						cidrLinkLocalIPv6, _ := linkLocalSubnet.Mask().Size()
+
+						cidripv6, _ := ipv6Subnet.Mask().Size()
+
 						ipAddresses := make([]string, 0, *subnet.IpAddressCount)
 						for _, ip := range subnet.IpAddresses {
 							ipAddresses = append(ipAddresses, *ip.IpAddress)
 						}
 
-						log.Printf("Router hostname: %s, vlan id: %d", *vlan.PrimaryRouter.Hostname, *vlan.VlanNumber)
+						log.Printf("router %s, vlan %d, stype %s, network %s",
+							*vlan.PrimaryRouter.Hostname,
+							*vlan.VlanNumber,
+							*subnet.SubnetType,
+							*subnet.NetworkIdentifier)
 
 						if _, ok := subnetVlanMap[*vlan.PrimaryRouter.Hostname]; !ok {
 							subnetVlanMap[*vlan.PrimaryRouter.Hostname] = make(map[int]Subnet)
@@ -151,6 +171,16 @@ func main() {
 							Network:            *subnet.NetworkIdentifier,
 							IpAddresses:        ipAddresses,
 							VirtualCenter:      virtualCenter,
+
+							IPv6Prefix: ipv6Subnet.String(),
+
+							GatewayIPv6: ipv6Subnet.Enumerate(1, 2)[0].String(),
+
+							StartIPv6Address: ipv6Subnet.Enumerate(1, 4)[0].String(),
+							StopIPv6Address:  ipv6Subnet.Enumerate(1, 100)[0].String(),
+							LinkLocalIPv6:    fmt.Sprintf("%s/%d", linkLocalSubnet.Enumerate(1, *vlan.VlanNumber)[0].String(), cidrLinkLocalIPv6),
+
+							CidrIPv6: cidripv6,
 						}
 					}
 				}
